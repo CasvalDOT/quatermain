@@ -29,6 +29,14 @@ func isRelativeURL(url string) bool {
 	return false
 }
 
+func isNoFollow(attribute string) bool {
+	return strings.Contains(attribute, "nofollow")
+}
+
+func isAllowedPage(page string) bool {
+	return true
+}
+
 func isHashURL(url string) bool {
 	firstChar := string(url[0])
 	matchChar := "#"

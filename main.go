@@ -102,13 +102,45 @@ func getPage(url string) (*goquery.Document, int, error) {
 		return nil, 2, err
 	}
 
+	if isValidPage(&response.Header, doc) == false {
+		return nil, 4, errors.New("Page cannot be followed")
+	}
+
 	return doc, 0, nil
+}
+
+func isValidPage(headers *http.Header, page *goquery.Document) bool {
+	xRobotsTag := headers.Get("X-Robots-Tag")
+	fmt.Println(xRobotsTag)
+	if strings.Contains(xRobotsTag, "noindex") == true || strings.Contains(xRobotsTag, "nofollow") == true {
+		return false
+	}
+
+	robotsNodes := page.Find("meta[name=\"robots\"]")
+	robotsMetaContent, ok := robotsNodes.Attr("content")
+	if ok == true {
+		if strings.Contains(robotsMetaContent, "nofollow") == true || strings.Contains(robotsMetaContent, "noindex") == true {
+			return false
+		}
+	}
+
+	return true
 }
 
 func scanPage(page *goquery.Document) {
 	page.Find("a").Each(func(i int, s *goquery.Selection) {
+
 		href, ok := s.Attr("href")
 		if ok == false {
+			return
+		}
+
+		rel, ok := s.Attr("rel")
+		if ok == false {
+			rel = ""
+		}
+
+		if isNoFollow(rel) == true {
 			return
 		}
 
@@ -246,7 +278,10 @@ func main() {
 	wg.Wait()
 
 	showScanStatus()
-	generateSitemap()
+
+	if len(linksSuccessed) > 0 {
+		generateSitemap()
+	}
 
 	for _, val := range linksFailed {
 		fmt.Println(val.StatusCode, val.URL)
