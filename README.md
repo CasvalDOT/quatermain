@@ -25,9 +25,9 @@ analyzes that it is a valid page by checking headers and meta tags, and for each
 
 ## Usage
 
-quatermain <url>/
+quatermain [OPTION]... [URL]
 
-*Note! The initial URL must be finish with /*
+*Note! The URL must be finish with /*
 
 ```
 quatermain https://mydomain.com/
