@@ -49,7 +49,7 @@ var maxConnections = 120
 // This parameter is very useful in limiting the number of requests over time.
 // In the case of sites that use third-party services with a limited number of requests,
 // it is important to set this parameter correctly
-var requestInterval = 0
+var requestInterval float64 = 0
 
 // The connectionOpened variable represents the number of connections open to the website
 var connectionsOpened = 0
@@ -224,8 +224,8 @@ func waitForURLToScan() {
 // 3. For each link found go to page and start scanning again
 // 4. The script finish when there are no more activities of scan
 func main() {
-	flagMaxConnections := flag.Int("c", maxConnections, "The allowed max connections")
-	flagRequestInterval := flag.Int("i", requestInterval, "The interval to wait before a request")
+	flagMaxConnections := flag.Int("c", maxConnections, "The allowed max connections.")
+	flagRequestInterval := flag.Float64("i", requestInterval, "The interval to wait before a request")
 	flagIsHelp := flag.Bool("h", false, "Print the help")
 	flag.Parse()
 
@@ -245,6 +245,11 @@ func main() {
 
 	maxConnections = *flagMaxConnections
 	requestInterval = *flagRequestInterval
+
+	if maxConnections < 2 {
+		log.Fatal("Minmum value for maxConnections is 2")
+		return
+	}
 
 	protocol = extractProtocol(url)
 	domain = extractDomain(url)
@@ -269,6 +274,7 @@ func main() {
 	time.Sleep(2 * time.Second)
 	wg.Wait()
 
+	time.Sleep(1 * time.Second)
 	showScanStatus()
 
 	if len(linksSuccessed) > 0 {
