@@ -121,12 +121,6 @@ func getPage(url string) (*goquery.Document, int, error) {
 }
 
 func scanPage(page *goquery.Document) {
-	robotsNodes := page.Find("meta[name=\"robots\"]")
-	robotsMetaContent, ok := robotsNodes.Attr("content")
-	if ok == true && haveNoIndexOrNoFollow(robotsMetaContent) {
-		return
-	}
-
 	page.Find("a").Each(func(i int, s *goquery.Selection) {
 
 		link := url.New(s, url.Options{
@@ -189,7 +183,22 @@ func start(url string) {
 		return
 	}
 
-	linksSuccessed = append(linksSuccessed, url)
+	robotsNodes := page.Find("meta[name=\"robots\"]")
+	robotsMetaContent, ok := robotsNodes.Attr("content")
+	if ok == true && haveNoIndexOrNoFollow(robotsMetaContent) {
+		return
+	}
+
+	canonicalNodes := page.Find("link[rel=\"canonical\"]")
+	canonicalNodesHref, ok := canonicalNodes.Attr("href")
+	if ok == true {
+		url = canonicalNodesHref
+	}
+
+	if isURLJustFound(&linksSuccessed, url) == false {
+		linksSuccessed = append(linksSuccessed, url)
+	}
+
 	go scanPage(page)
 }
 
