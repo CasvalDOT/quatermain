@@ -33,8 +33,9 @@ quatermain [OPTION]... [URL]
 quatermain https://mydomain.com/
 ```
 
+For options launch:
 ```
-quatermain -mc 200 -hb 120 https://mydomain.com/
+quatermain -h
 ```
 
 The command provided start scan mydomain.com with a maximum pool of connections of 200 and stop when the script is inactive after 120 seconds
