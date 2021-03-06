@@ -233,16 +233,6 @@ func waitForURLToScan() {
 // 3. For each link found go to page and start scanning again
 // 4. The script finish when there are no more activities of scan
 func main() {
-	// Defer the closing of the channel
-	defer close(ch)
-
-	args := os.Args
-	if len(args) <= 1 {
-		panic("Missing URL argument")
-	}
-
-	url := args[len(args)-1]
-
 	flagMaxConnections := flag.Int("c", maxConnections, "The allowed max connections")
 	flagRequestInterval := flag.Int("i", requestInterval, "The interval to wait before a request")
 	flagIsHelp := flag.Bool("h", false, "The help")
@@ -252,6 +242,16 @@ func main() {
 		fmt.Println(helpTemplate)
 		return
 	}
+
+	// Defer the closing of the channel
+	defer close(ch)
+
+	args := os.Args
+	if len(args) <= 1 {
+		panic("Missing URL argument")
+	}
+
+	url := args[len(args)-1]
 
 	maxConnections = *flagMaxConnections
 	requestInterval = *flagRequestInterval
