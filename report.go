@@ -7,10 +7,40 @@ import (
 	"time"
 )
 
+func isElementUnique(list *[]string, element string) bool {
+	match := true
+	for _, u := range *list {
+		if u == element {
+			match = false
+			break
+		}
+	}
+	return match
+}
+
+func parseLinks() []string {
+	var parsedPageLinks []string
+	for _, page := range linksSuccessed {
+		candidateLink := page.Link
+		if page.CanonicalLink != "" {
+			candidateLink = page.CanonicalLink
+		}
+
+		if isElementUnique(&parsedPageLinks, candidateLink) == false {
+			continue
+		}
+
+		parsedPageLinks = append(parsedPageLinks, candidateLink)
+
+	}
+
+	return parsedPageLinks
+}
+
 func generateSitemap() {
 
 	templateData := map[string]interface{}{
-		"List": linksSuccessed,
+		"List": parseLinks(),
 		"Time": time.Now().UTC().Format("2006-01-02T15:04:05-0700"),
 	}
 

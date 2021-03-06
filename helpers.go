@@ -17,16 +17,17 @@ func increaseConnectionsOpened() {
 }
 
 func appendBadURL(badURL string, errorCode int) {
-	linksFailed = append(linksFailed, BadURL{
-		URL:        badURL,
-		StatusCode: errorCode,
+	linksFailed = append(linksFailed, Page{
+		Link:          badURL,
+		StatusCode:    errorCode,
+		CanonicalLink: "",
 	})
 }
 
-func isURLJustFound(list *[]string, url string) bool {
+func isURLJustFound(list *[]Page, url string) bool {
 	match := false
 	for _, u := range *list {
-		if u == url {
+		if u.Link == url {
 			match = true
 			break
 		}
