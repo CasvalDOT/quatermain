@@ -38,4 +38,3 @@ For options launch:
 quatermain -h
 ```
 
-The command provided start scan mydomain.com with a maximum pool of connections of 200 and stop when the script is inactive after 120 seconds
