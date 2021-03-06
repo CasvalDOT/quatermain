@@ -36,30 +36,25 @@ var helpTemplate string
 //go:embed sitemap_template
 var sitemapTemplate string
 
-// To maximeize throughput of the scan, we setup a semaphore
-// The semaphore automaticcaly limit the number of go routines
-// to execute
+// To maximize the scan of the site, a semaphore for go routines will be created.
+// It  will manage the maximum of simultaneous connections to the site
 var lock *semaphore.Weighted
-
-// The context instead trace the pool of go routines
 var ctx = context.TODO()
 
-// Default paramters used for scanning
-// The maxConnections describe the number of connection that can be open
-// in the same time
+// The maxConnection parameter represents
+// the maximum number of simultaneous connections that the semaphore will have to handle
 var maxConnections = 120
 
-// The request interval is a parameter used to avoid side effects into the website.
-// For example is a website use geolocation free service with a limited call of 120 x minutes
-// is better set the param as 1
+// The requestInterval parameter represents the time interval between one connection to another.
+// This parameter is very useful in limiting the number of requests over time.
+// In the case of sites that use third-party services with a limited number of requests,
+// it is important to set this parameter correctly
 var requestInterval = 0
 
-// The count that monitoring the number
-// of connections currently opened
+// The connectionOpened variable represents the number of connections open to the website
 var connectionsOpened = 0
 
-// When a URL cannot be scanned, because not exist or because timeout
-// or another reasons, it will store in this array
+// Links that did not return a status code 200 or that generated some error end up in this variable
 var linksFailed = []BadURL{}
 
 // Instead if a URL is valid, will store here
@@ -68,16 +63,13 @@ var linksSuccessed = []string{}
 // In any case all links are contained here
 var allLinks = []string{}
 
-// The domain extracted from the URL provided as first
-// argument
+// The domain extracted from the starting URL
 var domain = ""
 
-// The protocol extracted from the URL provided
-// as first argument
+// The protocol extracted from the starting URL
 var protocol = ""
 
-// The main channel use to communicate
-// the URLs to scan when found inside a page
+// The main channel that takes care of collecting all requests for URLs to be scanned
 var ch = make(chan string, 1)
 
 // The waitgroup used to block the main loop
@@ -87,9 +79,9 @@ var wg = new(sync.WaitGroup)
 var robot robots.IRobot
 
 /*
-getPage fetch the html page and return an error
-in case of the following conditions
+	getPage fetch the html page
 
+	About errors:
 - Ok                                    -> CODE 0
 - Request generic error                 -> CODE 1
 - Cannot read the body                  -> CODE 2
@@ -181,8 +173,7 @@ func start(url string) {
 	page, statusCode, err := getPage(url)
 
 	if err != nil {
-		// Max connections created.
-		// try to repeat
+		// Max connections created. try to repeat the request
 		if strings.Contains(err.Error(), "too many open files") {
 			go func() {
 				time.Sleep(time.Second)
@@ -213,8 +204,6 @@ func waitForURLToScan() {
 
 		time.Sleep(time.Duration(requestInterval) * time.Second)
 
-		// Eexecute the page fetching inside an anon function
-		// In this case we can take advantage of defer logics inside a main loop
 		go func(url string) {
 			defer decreaseConnectionsOpened()
 			defer lock.Release(1)
