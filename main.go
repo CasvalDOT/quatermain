@@ -162,6 +162,11 @@ func scanPage(page *goquery.Document) {
 
 func start(url string) {
 
+	defer func() {
+		time.Sleep(1 * time.Second)
+		wg.Done()
+	}()
+
 	if robot != nil && robot.CheckURL(url) == false {
 		return
 	}
@@ -207,10 +212,6 @@ func waitForURLToScan() {
 		go func(url string) {
 			defer decreaseConnectionsOpened()
 			defer lock.Release(1)
-			defer func() {
-				time.Sleep(1 * time.Second)
-				wg.Done()
-			}()
 
 			increaseConnectionsOpened()
 			start(url)
