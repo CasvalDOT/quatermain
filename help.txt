@@ -1,0 +1,10 @@
+QUATERMAIN
+
+USAGE:
+-i the interval between a request (default is 0)
+-c the number of max connections allowed (default is 120)
+
+EXAMPLE:
+Scan the webiste with a pool of max 3 connections and interval for each request of 1 second
+
+quatermain -i 1 -c 3 https://mydomain.com/

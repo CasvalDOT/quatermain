@@ -33,10 +33,6 @@ quatermain [OPTION]... [URL]
 quatermain https://mydomain.com/
 ```
 
-You can change for now the following scripts parameters using the flags:
-- **maxConnections** with the flag **-mc** is the max of goroutines allowed to run in the same time. Default value is **120**.
-- **heartBeatInterval** with the flag **-hb** is the check interval in seconds until script finish to scan. Default value is 10 seconds.
-
 ```
 quatermain -mc 200 -hb 120 https://mydomain.com/
 ```
