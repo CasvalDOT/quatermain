@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
+	"strings"
 )
 
 func decreaseConnectionsOpened() {
@@ -63,6 +64,10 @@ func getURLFromArguments(args []string) string {
 	}
 
 	return ""
+}
+
+func haveNoIndexOrNoFollow(content string) bool {
+	return strings.Contains(content, "noindex") == true || strings.Contains(content, "nofollow") == true
 }
 
 func showScanStatus() {

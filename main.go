@@ -113,7 +113,7 @@ func getPage(url string) (*goquery.Document, int, error) {
 	}
 
 	xRobotsTag := response.Header.Get("X-Robots-Tag")
-	if strings.Contains(xRobotsTag, "noindex") == true || strings.Contains(xRobotsTag, "nofollow") == true {
+	if haveNoIndexOrNoFollow(xRobotsTag) == true {
 		return nil, httpXRobotTag, errors.New("Page cannot be followed or indexed")
 	}
 
@@ -123,10 +123,8 @@ func getPage(url string) (*goquery.Document, int, error) {
 func scanPage(page *goquery.Document) {
 	robotsNodes := page.Find("meta[name=\"robots\"]")
 	robotsMetaContent, ok := robotsNodes.Attr("content")
-	if ok == true {
-		if strings.Contains(robotsMetaContent, "nofollow") == true || strings.Contains(robotsMetaContent, "noindex") == true {
-			return
-		}
+	if ok == true && haveNoIndexOrNoFollow(robotsMetaContent) {
+		return
 	}
 
 	page.Find("a").Each(func(i int, s *goquery.Selection) {
