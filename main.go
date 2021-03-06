@@ -6,6 +6,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"quatermain/robots"
@@ -111,7 +112,7 @@ func getPage(url string) (*goquery.Document, int, error) {
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		return nil, response.StatusCode, errors.New("Not a valid page")
+		return nil, response.StatusCode, errors.New("Response status code is not valid")
 	}
 
 	doc, err := goquery.NewDocumentFromReader(response.Body)
@@ -246,12 +247,11 @@ func main() {
 	// Defer the closing of the channel
 	defer close(ch)
 
-	args := os.Args
-	if len(args) <= 1 {
-		panic("Missing URL argument")
+	url := getURLFromArguments(os.Args)
+	if url == "" {
+		log.Fatalln("Missing URL argument")
+		return
 	}
-
-	url := args[len(args)-1]
 
 	maxConnections = *flagMaxConnections
 	requestInterval = *flagRequestInterval
