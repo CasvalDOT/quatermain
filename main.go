@@ -199,7 +199,7 @@ func start(url string) {
 	go scanPage(page)
 }
 
-func checkLifeActivity() {
+func info() {
 	for {
 		showScanStatus()
 		time.Sleep(time.Second)
@@ -270,9 +270,8 @@ func main() {
 	// Init lock
 	lock = semaphore.NewWeighted(int64(maxConnections))
 
-	// wg.Add(1)
-
 	go waitForURLToScan()
+	go info()
 
 	// Scan the url provided
 	ch <- url

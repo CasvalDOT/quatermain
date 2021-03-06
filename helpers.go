@@ -51,10 +51,24 @@ func extractProtocol(url string) string {
 	return firstLayer[len(firstLayer)-1]
 }
 
+func getURLFromArguments(args []string) string {
+	onlyArgs := args[1:]
+	for _, arg := range onlyArgs {
+		match, err := regexp.MatchString("http(s|)://", arg)
+		if err != nil || match == false {
+			continue
+		}
+
+		return arg
+	}
+
+	return ""
+}
+
 func showScanStatus() {
 	c := exec.Command("clear")
 	c.Stdout = os.Stdout
-	//c.Run()
+	c.Run()
 	fmt.Println("Domain:", domain)
 	fmt.Println("Protocol:", protocol)
 	fmt.Println("Request interval:", requestInterval)
