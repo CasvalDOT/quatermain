@@ -20,7 +20,7 @@ func isElementUnique(list *[]string, element string) bool {
 
 func parseLinks() []string {
 	var parsedPageLinks []string
-	for _, page := range linksSuccessed {
+	for _, page := range explorer.GetGoodPagesFound() {
 		candidateLink := page.Link
 		if page.CanonicalLink != "" {
 			candidateLink = page.CanonicalLink
@@ -31,7 +31,6 @@ func parseLinks() []string {
 		}
 
 		parsedPageLinks = append(parsedPageLinks, candidateLink)
-
 	}
 
 	return parsedPageLinks

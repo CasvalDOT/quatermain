@@ -5,7 +5,6 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
-	"strings"
 )
 
 func decreaseConnectionsOpened() {
@@ -14,25 +13,6 @@ func decreaseConnectionsOpened() {
 
 func increaseConnectionsOpened() {
 	connectionsOpened = connectionsOpened + 1
-}
-
-func appendBadURL(badURL string, errorCode int) {
-	linksFailed = append(linksFailed, Page{
-		Link:          badURL,
-		StatusCode:    errorCode,
-		CanonicalLink: "",
-	})
-}
-
-func isURLJustFound(list *[]Page, url string) bool {
-	match := false
-	for _, u := range *list {
-		if u.Link == url {
-			match = true
-			break
-		}
-	}
-	return match
 }
 
 func extractDomain(url string) string {
@@ -67,10 +47,6 @@ func getURLFromArguments(args []string) string {
 	return ""
 }
 
-func haveNoIndexOrNoFollow(content string) bool {
-	return strings.Contains(content, "noindex") == true || strings.Contains(content, "nofollow") == true
-}
-
 func showScanStatus() {
 	c := exec.Command("clear")
 	c.Stdout = os.Stdout
@@ -79,7 +55,7 @@ func showScanStatus() {
 	fmt.Println("Protocol:", protocol)
 	fmt.Println("Request interval:", requestInterval)
 	fmt.Println(fmt.Sprintf("Connections: %d / %d", connectionsOpened, maxConnections))
-	fmt.Println("URL Found Total:", len(allLinks))
-	fmt.Println("URL Found NOK:", len(linksFailed))
-	fmt.Println("URL Found OK:", len(linksSuccessed))
+	fmt.Println("URL Found Total:", len(explorer.GetPagesFound()))
+	fmt.Println("URL Found NOK:", len(explorer.GetBadPagesFound()))
+	fmt.Println("URL Found OK:", len(explorer.GetGoodPagesFound()))
 }
