@@ -203,6 +203,4 @@ func main() {
 	showScanStatus()
 
 	generateSitemap()
-
-	fmt.Println(explorer.GetBadPagesFound())
 }
