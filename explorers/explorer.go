@@ -2,8 +2,11 @@ package explorers
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
+	netURL "net/url"
 	"quatermain/url"
+	"regexp"
 
 	"github.com/PuerkitoBio/goquery"
 )
@@ -25,9 +28,11 @@ type Page struct {
 type Options struct {
 	Domain   string
 	Protocol string
+	Ethical  bool
 }
 
 type explorer struct {
+	ethical    bool
 	name       string
 	domain     string
 	protocol   string
@@ -101,6 +106,14 @@ func (e *explorer) isLinkInCache(link string) bool {
 
 func (e *explorer) Fetch(linkToPage string) (*goquery.Document, int, error) {
 	client := &http.Client{}
+
+	baseURL, err := netURL.Parse(linkToPage)
+	if err != nil {
+		fmt.Println("Malformed URL: ", err.Error(), baseURL)
+	}
+	r := regexp.MustCompile(" ")
+	linkToPage = r.ReplaceAllString(linkToPage, "%20")
+
 	request, err := http.NewRequest("GET", linkToPage, nil)
 	if err != nil {
 		return nil, ErrorCode, err
@@ -110,11 +123,14 @@ func (e *explorer) Fetch(linkToPage string) (*goquery.Document, int, error) {
 
 	response, err := client.Do(request)
 	if err != nil {
+		fmt.Println("JJJ", err)
 		return nil, ErrorCode, err
 	}
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
+		fmt.Println("JJJ", 2)
+
 		return nil, response.StatusCode, errors.New("Response status code is not valid")
 	}
 
@@ -124,7 +140,7 @@ func (e *explorer) Fetch(linkToPage string) (*goquery.Document, int, error) {
 	}
 
 	xRobotsTag := response.Header.Get("X-Robots-Tag")
-	if haveNoIndexOrNoFollow(xRobotsTag) == true {
+	if e.ethical == true && haveNoIndexOrNoFollow(xRobotsTag) == true {
 		return nil, NoFollowCode, errors.New("Page cannot be followed or indexed")
 	}
 
@@ -143,19 +159,23 @@ func (e *explorer) SearchLinks(page *goquery.Document, callback func(string)) {
 			link.IsInDomain(e.domain) == false ||
 			link.IsMedia() ||
 			link.IsHash() ||
-			link.HaveNoFollow() {
+			link.IsPhoneNumber() ||
+			link.IsEmail() {
 			return
 		}
 
-		linkWithoutHash := link.StripHash()
-
-		if e.isLinkInCache(linkWithoutHash) == true {
+		if e.ethical && link.HaveNoFollow() {
 			return
 		}
 
-		e.pageCache = append(e.pageCache, linkWithoutHash)
+		linkCleaned := link.GetHref()
+		if e.isLinkInCache(linkCleaned) == true {
+			return
+		}
 
-		callback(linkWithoutHash)
+		e.pageCache = append(e.pageCache, linkCleaned)
+
+		callback(linkCleaned)
 	})
 }
 
@@ -182,6 +202,7 @@ func (e *explorer) FindCanonical(page *goquery.Document) string {
 // New ...
 func New(name string, options Options) IExplorer {
 	return &explorer{
+		ethical:  options.Ethical,
 		domain:   options.Domain,
 		protocol: options.Protocol,
 		name:     name,
