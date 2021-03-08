@@ -8,9 +8,10 @@ import (
 )
 
 var pageExtensions = []string{
-	"html",
-	"asp",
-	"php",
+	".html",
+	".asp",
+	".php",
+	".page",
 	"",
 }
 
@@ -32,14 +33,16 @@ type urlDOM struct {
 
 // IURLDOM interface
 type IURLDOM interface {
+	GetHref() string
 	EmptyHref() bool
 	IsRelativeURL() bool
 	HaveNoFollow() bool
 	IsHash() bool
 	IsInDomain(string) bool
 	IsMedia() bool
+	IsPhoneNumber() bool
+	IsEmail() bool
 	IsDowload() bool
-	StripHash() string
 }
 
 func (u *urlDOM) matchFirstChar(charToMatch string) bool {
@@ -48,6 +51,15 @@ func (u *urlDOM) matchFirstChar(charToMatch string) bool {
 	}
 	firstChar := string(u.href[0])
 	return charToMatch == firstChar
+}
+
+func (u *urlDOM) GetHref() string {
+	return u.href
+}
+
+func (u *urlDOM) isWithoutProtocol() bool {
+	match, ok := regexp.MatchString("^//", u.href)
+	return ok == nil && match == true
 }
 
 func (u *urlDOM) IsRelativeURL() bool {
@@ -92,14 +104,38 @@ func (u *urlDOM) IsInDomain(domain string) bool {
 	return rgx.MatchString(u.href)
 }
 
-func (u *urlDOM) StripHash() string {
+func (u *urlDOM) removeHash() string {
 	rgx := regexp.MustCompile("#.*")
 	return rgx.ReplaceAllString(u.href, "")
 }
 
+func (u *urlDOM) removeSpecialChars() string {
+	rgx := regexp.MustCompile("\\n|\\r")
+	return rgx.ReplaceAllString(u.href, "")
+}
+
+func (u *urlDOM) cleanHref() {
+	s := u.removeHash()
+	s = u.removeSpecialChars()
+	u.href = s
+}
+
+func (u *urlDOM) IsPhoneNumber() bool {
+	return strings.Contains(u.href, "tel:")
+}
+
+func (u *urlDOM) IsEmail() bool {
+	return strings.Contains(u.href, "mailto:")
+}
+
 func (u *urlDOM) extractExtension() {
-	rgx := regexp.MustCompile("^.*(\\.|)$")
-	u.extension = rgx.ReplaceAllString(u.href, "")
+	rgx := regexp.MustCompile(u.domain + ".*(\\.[a-zA-Z0-9]+$)")
+	matchs := rgx.FindAllStringSubmatch(u.href, -1)
+	if len(matchs) == 0 {
+		u.extension = ""
+	} else {
+		u.extension = matchs[0][1]
+	}
 }
 
 func (u *urlDOM) extractAttribute(attribute string) string {
@@ -115,15 +151,9 @@ func (u *urlDOM) extractRelAttribute() {
 	u.rel = u.extractAttribute("rel")
 }
 
-func (u *urlDOM) extractHref() {
-	u.href = u.extractAttribute("href")
-}
-
 func (u *urlDOM) init() {
 	u.extractRelAttribute()
 	u.extractExtension()
-	u.extractHref()
-
 }
 
 // New ...
@@ -132,13 +162,20 @@ func New(url *goquery.Selection, options Options) IURLDOM {
 		element: url,
 	}
 
-	instance.init()
+	instance.protocol = options.DecorateRelativeURLWithProtocol
+	instance.domain = options.DecorateRelativeURLWithDomain
+	instance.href = instance.extractAttribute("href")
+
+	if instance.isWithoutProtocol() {
+		instance.href = instance.protocol + ":" + instance.href
+	}
 
 	if instance.IsRelativeURL() {
-		instance.protocol = options.DecorateRelativeURLWithProtocol
-		instance.domain = options.DecorateRelativeURLWithDomain
-		instance.href = instance.protocol + "://" + instance.domain + instance.href
+		instance.href = instance.protocol + "://" + instance.domain + instance.extractAttribute("href")
 	}
+
+	instance.init()
+	instance.cleanHref()
 
 	return &instance
 }
