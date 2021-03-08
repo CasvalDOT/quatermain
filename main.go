@@ -13,7 +13,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/PuerkitoBio/goquery"
 	"golang.org/x/sync/semaphore"
 )
 
@@ -68,19 +67,24 @@ var robot robots.IRobot
 // The explorer
 var explorer explorers.IExplorer
 
-func scanPage(page *goquery.Document) {
-	explorer.SearchLinks(page, func(link string) {
-		go func() {
-			ch <- link
-		}()
-	})
-}
-
-func start(url string) {
+func explore(url string) {
+	var canonicalURL string
+	var statusCode int
 
 	defer func() {
 		time.Sleep(1 * time.Second)
 		wg.Done()
+	}()
+
+	defer func() {
+		if explorer.IsPageVisited(url) == true {
+			return
+		}
+		explorer.AppendPage(&explorers.Page{
+			Link:          url,
+			CanonicalLink: canonicalURL,
+			StatusCode:    statusCode,
+		})
 	}()
 
 	if robot != nil && robot.CheckURL(url) == false {
@@ -109,22 +113,12 @@ func start(url string) {
 		return
 	}
 
-	canonicalURL := explorer.FindCanonical(page)
+	canonicalURL = explorer.FindCanonical(page)
 
-	explorer.AppendPage(&explorers.Page{
-		Link:          url,
-		CanonicalLink: canonicalURL,
-		StatusCode:    statusCode,
+	// Search for other links to scan
+	go explorer.SearchLinks(page, func(link string) {
+		ch <- link
 	})
-
-	go scanPage(page)
-}
-
-func info() {
-	for {
-		showScanStatus()
-		time.Sleep(time.Second)
-	}
 }
 
 func waitForURLToScan() {
@@ -139,7 +133,7 @@ func waitForURLToScan() {
 			defer lock.Release(1)
 
 			increaseConnectionsOpened()
-			start(url)
+			explore(url)
 		}(urlToScan)
 	}
 }
@@ -152,6 +146,7 @@ func main() {
 	flagMaxConnections := flag.Int("c", maxConnections, "The allowed max connections.")
 	flagRequestInterval := flag.Float64("i", requestInterval, "The interval to wait before a request")
 	flagIsHelp := flag.Bool("h", false, "Print the help")
+	flagIsUnethical := flag.Bool("u", true, "Force the explorer to be unethical and no respect crawler rules")
 	flag.Parse()
 
 	if *flagIsHelp == true {
@@ -189,6 +184,7 @@ func main() {
 	explorer = explorers.New(userAgent, explorers.Options{
 		Domain:   domain,
 		Protocol: protocol,
+		Ethical:  *flagIsUnethical,
 	})
 
 	// Init lock
@@ -207,4 +203,6 @@ func main() {
 	showScanStatus()
 
 	generateSitemap()
+
+	fmt.Println(explorer.GetBadPagesFound())
 }
