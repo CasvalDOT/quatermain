@@ -5,7 +5,15 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
+	"time"
 )
+
+func info() {
+	for {
+		showScanStatus()
+		time.Sleep(time.Second)
+	}
+}
 
 func decreaseConnectionsOpened() {
 	connectionsOpened = connectionsOpened - 1
@@ -50,7 +58,7 @@ func getURLFromArguments(args []string) string {
 func showScanStatus() {
 	c := exec.Command("clear")
 	c.Stdout = os.Stdout
-	c.Run()
+	//c.Run()
 	fmt.Println("Domain:", domain)
 	fmt.Println("Protocol:", protocol)
 	fmt.Println("Request interval:", requestInterval)
