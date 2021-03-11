@@ -43,7 +43,6 @@ func (r *robot) GetRules() []Rule {
 func (r *robot) CheckURL(url string) bool {
 	isAllowed := true
 	for _, rule := range r.rules {
-
 		match, err := regexp.MatchString(rule.url, url)
 		if err == nil && match == true {
 			isAllowed = rule.isAllowed
