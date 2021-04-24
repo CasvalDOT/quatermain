@@ -24,6 +24,11 @@ func increaseConnectionsOpened() {
 }
 
 func extractDomain(url string) string {
+	lastByteOfURL := url[len(url)-1]
+	if string(lastByteOfURL) != "/" {
+		url += "/"
+	}
+
 	rgx := regexp.MustCompile("^" + protocol + "://(www\\.|)(.*?)\\/")
 	matchs := rgx.FindAllStringSubmatch(url, 1)
 
