@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"quatermain/explorers"
 	"quatermain/robots"
@@ -88,10 +89,12 @@ func explore(url string) {
 	}()
 
 	if robot != nil && robot.CheckURL(url) == false {
+		statusCode = http.StatusForbidden
 		return
 	}
 
 	if explorer.IsPageVisited(url) == true {
+		statusCode = http.StatusConflict
 		return
 	}
 
@@ -110,6 +113,7 @@ func explore(url string) {
 	}
 
 	if explorer.BlockedByRobotsTag(page) == true {
+		statusCode = http.StatusForbidden
 		return
 	}
 
