@@ -6,7 +6,6 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"net/http"
 	"os"
 	"quatermain/explorers"
 	"quatermain/robots"
@@ -31,6 +30,9 @@ var helpTemplate string
 
 //go:embed sitemap_template
 var sitemapTemplate string
+
+//go:embed badurls_template
+var badurlsTemplate string
 
 // To maximize the scan of the site, a semaphore for go routines will be created.
 // It  will manage the maximum of simultaneous connections to the site
@@ -89,12 +91,12 @@ func explore(url string) {
 	}()
 
 	if robot != nil && robot.CheckURL(url) == false {
-		statusCode = http.StatusForbidden
+		statusCode = explorers.NoFollowCode
 		return
 	}
 
 	if explorer.IsPageVisited(url) == true {
-		statusCode = http.StatusConflict
+		statusCode = explorers.PageVisited
 		return
 	}
 
@@ -113,7 +115,7 @@ func explore(url string) {
 	}
 
 	if explorer.BlockedByRobotsTag(page) == true {
-		statusCode = http.StatusForbidden
+		statusCode = explorers.BlockedByRobotsTagCode
 		return
 	}
 
@@ -206,7 +208,10 @@ func main() {
 	time.Sleep(1 * time.Second)
 	showScanStatus()
 
+	fmt.Println("Generating the sitemap")
 	generateSitemap()
 
-	fmt.Println(explorer.GetBadPagesFound())
+	fmt.Println("Generating the list of URLs ignored or errored")
+	generateBadURLsList()
+
 }
