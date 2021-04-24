@@ -1,0 +1,17 @@
+# Here the list of urls ignored or errored
+# Each URL have a code at beginning that identify
+# the status or condition encounter during the process of scanning
+#
+# http error codes like 404, 500, ... plus:
+#
+# 1 = Generic error happend (timeout, library error, ...)
+# 2 = Page marked with NoFollow
+# 3 = Page marked with NoIndex
+# 4 = Page marked as previous scanned
+# 5 = Page blocked by robots tag
+# 6 = No valid content type (a PDF document for example)
+#
+
+{{ range .List }}
+[{{ .StatusCode }}] {{ .Link }}
+{{ end }}

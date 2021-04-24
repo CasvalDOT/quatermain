@@ -17,6 +17,18 @@ const ErrorCode = 1
 // NoFollowCode ...
 const NoFollowCode = 2
 
+// NoIndexCode ...
+const NoIndexCode = 3
+
+// PageVisited ...
+const PageVisited = 4
+
+// BlockedByRobotsTagCode ...
+const BlockedByRobotsTagCode = 5
+
+// NoValidContentTypeCode ...
+const NoValidContentTypeCode = 6
+
 // Page ...
 type Page struct {
 	StatusCode    int
@@ -51,11 +63,20 @@ type IExplorer interface {
 	GetBadPagesFound() []Page
 	BlockedByRobotsTag(*goquery.Document) bool
 	FindCanonical(*goquery.Document) string
+	IsAllowedContentType(string) bool
 	AppendPage(*Page)
 }
 
 func (e *explorer) GetPagesFound() []Page {
 	return e.pagesFound
+}
+
+func (e *explorer) IsAllowedContentType(contentType string) bool {
+	if contentType == "text/html" {
+		return true
+	}
+
+	return false
 }
 
 func (e *explorer) GetGoodPagesFound() []Page {
@@ -123,14 +144,11 @@ func (e *explorer) Fetch(linkToPage string) (*goquery.Document, int, error) {
 
 	response, err := client.Do(request)
 	if err != nil {
-		fmt.Println("JJJ", err)
 		return nil, ErrorCode, err
 	}
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		fmt.Println("JJJ", 2)
-
 		return nil, response.StatusCode, errors.New("Response status code is not valid")
 	}
 
@@ -140,8 +158,18 @@ func (e *explorer) Fetch(linkToPage string) (*goquery.Document, int, error) {
 	}
 
 	xRobotsTag := response.Header.Get("X-Robots-Tag")
-	if e.ethical == true && haveNoIndexOrNoFollow(xRobotsTag) == true {
-		return nil, NoFollowCode, errors.New("Page cannot be followed or indexed")
+	contentType := response.Header.Get("Content-Type")
+
+	if e.ethical == true && haveNoFollow(xRobotsTag) == true {
+		return nil, NoFollowCode, errors.New("Page cannot be followed")
+	}
+
+	if e.ethical == true && haveNoIndex(xRobotsTag) == true {
+		return nil, NoIndexCode, errors.New("Page cannot be indexed")
+	}
+
+	if e.IsAllowedContentType(contentType) {
+		return nil, NoValidContentTypeCode, errors.New("The content type is invalid")
 	}
 
 	return document, 0, nil
