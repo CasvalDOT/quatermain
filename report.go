@@ -37,7 +37,6 @@ func parseLinks() []string {
 }
 
 func generateSitemap() {
-
 	templateData := map[string]interface{}{
 		"List": parseLinks(),
 		"Time": time.Now().UTC().Format("2006-01-02T15:04:05-0700"),
@@ -53,6 +52,30 @@ func generateSitemap() {
 	}
 
 	file, err := os.Create("sitemap.xml")
+	if err != nil {
+		panic(err)
+	}
+
+	defer file.Close()
+
+	file.Write(outputReader.Bytes())
+}
+
+func generateBadURLsList() {
+	templateData := map[string]interface{}{
+		"List": explorer.GetBadPagesFound(),
+	}
+
+	tmpl := template.Must(template.New("badurls").Parse(badurlsTemplate))
+
+	var outputReader bytes.Buffer
+
+	err := tmpl.Execute(&outputReader, templateData)
+	if err != nil {
+		panic(err)
+	}
+
+	file, err := os.Create("badurls.txt")
 	if err != nil {
 		panic(err)
 	}
