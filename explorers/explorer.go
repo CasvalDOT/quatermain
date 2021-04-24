@@ -123,14 +123,11 @@ func (e *explorer) Fetch(linkToPage string) (*goquery.Document, int, error) {
 
 	response, err := client.Do(request)
 	if err != nil {
-		fmt.Println("JJJ", err)
 		return nil, ErrorCode, err
 	}
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		fmt.Println("JJJ", 2)
-
 		return nil, response.StatusCode, errors.New("Response status code is not valid")
 	}
 
