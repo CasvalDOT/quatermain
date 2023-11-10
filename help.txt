@@ -5,6 +5,10 @@ USAGE:
 -c the number of max connections allowed (default is 120)
 
 EXAMPLE:
-Scan the webiste with a pool of max 3 connections and interval for each request of 1 second
+Scan the website with a pool of max 3 connections and interval for each request of 1 second
 
 quatermain -i 1 -c 3 https://mydomain.com/
+
+Scan the website in unethical way
+
+quatermain -u https://mydomain.com/

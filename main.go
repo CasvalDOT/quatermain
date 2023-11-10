@@ -152,7 +152,7 @@ func main() {
 	flagMaxConnections := flag.Int("c", maxConnections, "The allowed max connections.")
 	flagRequestInterval := flag.Float64("i", requestInterval, "The interval to wait before a request")
 	flagIsHelp := flag.Bool("h", false, "Print the help")
-	flagIsUnethical := flag.Bool("u", true, "Force the explorer to be unethical and no respect crawler rules")
+	flagIsUnethical := flag.Bool("u", false, "Force the explorer to be unethical and no respect crawler rules")
 	flag.Parse()
 
 	if *flagIsHelp == true {
@@ -190,7 +190,7 @@ func main() {
 	explorer = explorers.New(userAgent, explorers.Options{
 		Domain:   domain,
 		Protocol: protocol,
-		Ethical:  *flagIsUnethical,
+		Ethical:  !*flagIsUnethical,
 	})
 
 	// Init lock
